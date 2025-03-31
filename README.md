@@ -1,6 +1,6 @@
-# License Plate Number Recognition Model
+# Bolt Hole Identifier Model
 
-A deep learning model for recognizing numbers in license plate images, with special handling for cases where no number is present.
+A deep learning model for recognizing numbers in a bolt hole images, with special handling for cases where no number is present.
 
 ## Features
 
