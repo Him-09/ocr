@@ -1,7 +1,37 @@
+Evaluation Results
+=================
+Date: 2024-03-30
+Time: 11:30 AM
 
+Model Information
+----------------
+Model File: best_model2.pth
+Device Used: CPU
 
 Test Results
 -----------
 Regular Accuracy: 100.00%
 No-Number Accuracy: 95.24%
 
+Performance Analysis
+------------------
+1. Regular Number Recognition:
+   - Perfect accuracy (100%)
+   - No misclassifications in number recognition
+
+2. No-Number Detection:
+   - Very high accuracy (95.24%)
+   - Small margin for improvement in no-number cases
+
+Technical Details
+---------------
+- Model Architecture: SimpleModel with 100 classes
+- Test Dataset: src/test1_data_label.csv
+- Image Directory: src/testdata
+- Evaluation completed successfully
+
+Notes
+-----
+- The model shows exceptional performance in regular number recognition
+- No-number detection is strong but could potentially be improved
+- All tests were completed without errors

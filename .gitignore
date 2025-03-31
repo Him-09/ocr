@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
 build/
 develop-eggs/
 dist/
@@ -22,8 +23,8 @@ wheels/
 
 # Virtual Environment
 venv/
-.venv/
 ENV/
+.env
 
 # IDE
 .idea/
@@ -31,24 +32,16 @@ ENV/
 *.swp
 *.swo
 
-# Model files and large data
+# Model files
 *.pth
 *.pt
 *.ckpt
-*.h5
-*.hdf5
-*.pyd
-*.dll
-*.lib
-
-# Training history
-training_history*.csv
 
 # Logs
 *.log
+logs/
 
 # Local development settings
-.env
 .env.local
 
 # OS generated files

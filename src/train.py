@@ -4,8 +4,8 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import CosineAnnealingLR
 import pandas as pd
 
-from src.data.dataset import get_data_loaders
-from src.models.model import SimpleModel
+from data.dataset import get_data_loaders
+from models.model import SimpleModel
 
 def compute_class_weights(train_loader, device):
     class_counts = torch.zeros(101, device=device)  # 0-99 for numbers, 100 for no-number
@@ -172,11 +172,11 @@ def main():
         print('-' * 60)
         
         # Save history to CSV
-        pd.DataFrame(history).to_csv('training_history2.csv', index=False)
+        pd.DataFrame(history).to_csv('training_history.csv', index=False)
         
         # Save model if it's the best validation accuracy so far
         if epoch == 0 or val_acc > max(h['val_accuracy'] for h in history[:-1]):
-            torch.save(model.state_dict(), 'best_model2.pth')
+            torch.save(model.state_dict(), 'best_model.pth')
 
 if __name__ == '__main__':
     main()
