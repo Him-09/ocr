@@ -1,6 +1,6 @@
-# License Plate Number Recognition API
+# Bolt Hole Identifier Model
 
-This is a FastAPI-based service for recognizing numbers in license plate images. The service uses a deep learning model trained on license plate images to identify numbers and detect when no number is present.
+A deep learning model for recognizing numbers in a bolt hole images, with special handling for cases where no number is present.
 
 ## API Endpoints
 
@@ -112,75 +112,34 @@ apt-get install certbot python3-certbot-nginx
 certbot --nginx -d your_domain.com
 ```
 
-## API Usage
-
-### Predict Endpoint
-
-Send a POST request to `/predict` with an image file:
-
-```bash
-curl -X POST -F "file=@path/to/your/image.jpg" http://your_domain.com/predict
-```
-
-Response format:
-```json
-{
-    "predicted_number": "42",
-    "confidence": 0.98,
-    "raw_probabilities": [...]
-}
-```
-
-### Health Check
-
-Check the API health:
-
-```bash
-curl http://your_domain.com/health
-```
-
-Response format:
-```json
-{
-    "status": "healthy",
-    "model_loaded": true,
-    "device": "cpu"
-}
-```
-
 ## Monitoring and Maintenance
 
-1. Check container logs:
+1. View container logs:
 ```bash
-docker logs license-plate-api
+docker logs <container_id>
 ```
 
-2. Restart the container:
+2. Restart container:
 ```bash
-docker restart license-plate-api
+docker restart <container_id>
 ```
 
-3. Update the application:
+3. Update application:
 ```bash
 git pull
 docker build -t license-plate-api .
-docker stop license-plate-api
+docker stop <container_id>
+docker rm <container_id>
 docker run -d -p 8000:8000 license-plate-api
 ```
 
 ## Security Considerations
 
-1. Set up a firewall:
-```bash
-ufw allow ssh
-ufw allow http
-ufw allow https
-ufw enable
-```
-
-2. Use environment variables for sensitive data
-3. Regularly update the system and dependencies
-4. Monitor logs for suspicious activity
+1. Keep system and dependencies updated
+2. Use HTTPS for all API calls
+3. Implement rate limiting
+4. Regular security audits
+5. Monitor logs for suspicious activity
 
 ## Troubleshooting
 
@@ -191,17 +150,16 @@ docker ps
 
 2. View container logs:
 ```bash
-docker logs license-plate-api
+docker logs <container_id>
 ```
 
 3. Check Nginx logs:
 ```bash
-tail -f /var/log/nginx/access.log
 tail -f /var/log/nginx/error.log
+tail -f /var/log/nginx/access.log
 ```
 
-4. Restart services:
+4. Verify SSL certificate:
 ```bash
-docker restart license-plate-api
-systemctl restart nginx
-``` 
+certbot certificates
+```
