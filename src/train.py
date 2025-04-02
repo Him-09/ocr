@@ -5,7 +5,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 import pandas as pd
 
 from data.dataset import get_data_loaders
-from models.model import SimpleModel
+from models.model import MyModel
 
 def compute_class_weights(train_loader, device):
     class_counts = torch.zeros(101, device=device)  # 0-99 for numbers, 100 for no-number
@@ -102,15 +102,15 @@ def validate(model, val_loader, criterion, device):
 
 def main():
     # Parameters
-    num_epochs = 50  # Increased epochs
+    num_epochs = 35  # Increased epochs
     batch_size = 64  # Increased batch size
     initial_lr = 0.001
     warmup_epochs = 5
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     # Data paths
-    csv_path = "src/data_label.csv"
-    image_folder = "src/train&valdata"
+    csv_path = "data_label.csv"
+    image_folder = "train&valdata"
     
     # Get data loaders
     train_loader, val_loader = get_data_loaders(
@@ -120,7 +120,7 @@ def main():
     )
     
     # Initialize model
-    model = SimpleModel(num_classes=100).to(device)  # 100 classes for numbers 00-99
+    model = MyModel(num_classes=100).to(device)  # 100 classes for numbers 00-99
     
     # Compute class weights for balanced loss
     class_weights = compute_class_weights(train_loader, device)
@@ -172,11 +172,11 @@ def main():
         print('-' * 60)
         
         # Save history to CSV
-        pd.DataFrame(history).to_csv('training_history.csv', index=False)
+        pd.DataFrame(history).to_csv('training_history3.csv', index=False)
         
         # Save model if it's the best validation accuracy so far
         if epoch == 0 or val_acc > max(h['val_accuracy'] for h in history[:-1]):
-            torch.save(model.state_dict(), 'best_model.pth')
+            torch.save(model.state_dict(), 'best_model3.pth')
 
 if __name__ == '__main__':
     main()

@@ -1,108 +1,207 @@
-# License Plate Number Recognition Model
+# License Plate Number Recognition API
 
-A deep learning model for recognizing numbers in license plate images, with special handling for cases where no number is present.
+This is a FastAPI-based service for recognizing numbers in license plate images. The service uses a deep learning model trained on license plate images to identify numbers and detect when no number is present.
 
-## Features
+## API Endpoints
 
-- High accuracy in recognizing numbers (00-99)
-- Special handling for no-number cases
-- Data augmentation for improved generalization
-- Early stopping and learning rate scheduling
-- Comprehensive evaluation metrics
+- `GET /`: Root endpoint with API information
+- `POST /predict`: Endpoint for predicting numbers in license plate images
+- `GET /health`: Health check endpoint
 
-## Performance Metrics
+## Local Development
 
-- Regular Number Accuracy: 100%
-- No-Number Detection Accuracy: 95.24%
-- Fast convergence (high accuracy achieved within 10-15 epochs)
-- Stable training with minimal overfitting
-
-## Project Structure
-
-```
-├── src/
-│   ├── data/
-│   │   └── dataset.py      # Dataset and data loading utilities
-│   ├── models/
-│   │   └── model.py        # Model architecture
-│   ├── train.py           # Training script
-│   └── evaluate.py        # Evaluation script
-├── requirements.txt       # Project dependencies
-└── README.md             # Project documentation
-```
-
-## Requirements
-
-- Python 3.8+
-- PyTorch
-- torchvision
-- pandas
-- numpy
-- PIL (Pillow)
-
-## Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/license-plate-recognition.git
-cd license-plate-recognition
-```
-
-2. Create and activate a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. Install dependencies:
+1. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-## Usage
-
-### Training
-
-To train the model:
+2. Run the API:
 ```bash
-python -m src.train
+python src/api.py
 ```
 
-### Evaluation
+The API will be available at `http://localhost:8000`
 
-To evaluate the model:
+## Docker Deployment
+
+1. Build the Docker image:
 ```bash
-python -m src.evaluate
+docker build -t license-plate-api .
 ```
 
-## Model Architecture
+2. Run the container:
+```bash
+docker run -p 8000:8000 license-plate-api
+```
 
-The model uses a CNN architecture with:
-- 3 convolutional layers with batch normalization
-- Max pooling layers
-- Dropout for regularization
-- Fully connected layers for classification
+## DigitalOcean Deployment
 
-## Training Features
+1. Create a new Droplet on DigitalOcean:
+   - Choose Ubuntu 20.04 LTS
+   - Select a plan with at least 2GB RAM
+   - Choose a datacenter region
+   - Add your SSH key
 
-- Data augmentation (rotation, translation, scaling)
-- Learning rate warmup and cosine annealing
-- Early stopping
-- Class balancing
-- Batch normalization
+2. SSH into your Droplet:
+```bash
+ssh root@your_droplet_ip
+```
 
-## Results
+3. Install Docker:
+```bash
+# Update system
+apt-get update
 
-The model achieves:
-- 100% accuracy on regular number recognition
-- 95.24% accuracy on no-number detection
-- Fast convergence (high accuracy within 10-15 epochs)
-- Stable training with minimal overfitting
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
 
-## Contributing
+# Add your user to docker group
+usermod -aG docker $USER
+```
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+4. Clone the repository:
+```bash
+git clone your_repository_url
+cd your_repository
+```
 
-## License
+5. Build and run the Docker container:
+```bash
+docker build -t license-plate-api .
+docker run -d -p 8000:8000 license-plate-api
+```
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+6. Set up Nginx as reverse proxy (optional but recommended):
+```bash
+# Install Nginx
+apt-get install nginx
+
+# Create Nginx configuration
+cat > /etc/nginx/sites-available/license-plate-api << 'EOL'
+server {
+    listen 80;
+    server_name your_domain.com;
+
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+EOL
+
+# Enable the site
+ln -s /etc/nginx/sites-available/license-plate-api /etc/nginx/sites-enabled/
+rm /etc/nginx/sites-enabled/default
+
+# Test and restart Nginx
+nginx -t
+systemctl restart nginx
+```
+
+7. Set up SSL with Certbot (optional but recommended):
+```bash
+# Install Certbot
+apt-get install certbot python3-certbot-nginx
+
+# Get SSL certificate
+certbot --nginx -d your_domain.com
+```
+
+## API Usage
+
+### Predict Endpoint
+
+Send a POST request to `/predict` with an image file:
+
+```bash
+curl -X POST -F "file=@path/to/your/image.jpg" http://your_domain.com/predict
+```
+
+Response format:
+```json
+{
+    "predicted_number": "42",
+    "confidence": 0.98,
+    "raw_probabilities": [...]
+}
+```
+
+### Health Check
+
+Check the API health:
+
+```bash
+curl http://your_domain.com/health
+```
+
+Response format:
+```json
+{
+    "status": "healthy",
+    "model_loaded": true,
+    "device": "cpu"
+}
+```
+
+## Monitoring and Maintenance
+
+1. Check container logs:
+```bash
+docker logs license-plate-api
+```
+
+2. Restart the container:
+```bash
+docker restart license-plate-api
+```
+
+3. Update the application:
+```bash
+git pull
+docker build -t license-plate-api .
+docker stop license-plate-api
+docker run -d -p 8000:8000 license-plate-api
+```
+
+## Security Considerations
+
+1. Set up a firewall:
+```bash
+ufw allow ssh
+ufw allow http
+ufw allow https
+ufw enable
+```
+
+2. Use environment variables for sensitive data
+3. Regularly update the system and dependencies
+4. Monitor logs for suspicious activity
+
+## Troubleshooting
+
+1. Check container status:
+```bash
+docker ps
+```
+
+2. View container logs:
+```bash
+docker logs license-plate-api
+```
+
+3. Check Nginx logs:
+```bash
+tail -f /var/log/nginx/access.log
+tail -f /var/log/nginx/error.log
+```
+
+4. Restart services:
+```bash
+docker restart license-plate-api
+systemctl restart nginx
+``` 

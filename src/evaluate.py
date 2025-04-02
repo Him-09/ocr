@@ -35,8 +35,8 @@ def evaluate(model, test_loader, device):
 
 def main():
     # Set paths
-    csv_path = "src/test1_data_label.csv"
-    image_folder = "src/testdata"
+    csv_path = "test1_data_label.csv"
+    image_folder = "testdata"
     
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

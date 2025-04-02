@@ -1,43 +1,44 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from PIL import Image
 import io
-import torch
+import numpy as np
 from torchvision import transforms
 from models.model import MyModel
 import uvicorn
-import numpy as np
-import os
-from download_model import download_model
 
 app = FastAPI(
-    title="Bolt Hole Cast Number Identification API",
-    description="API for identifying cast numbers in bolt holes on hub surfaces",
+    title="Bolt Hole Number Recognition API",
+    description="API for recognizing numbers in bolt hole images",
     version="1.0.0"
 )
 
-# Load model
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
+# Set device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = MyModel(100)  # Initialize your model
+print(f'Using device: {device}')
 
-# Download model file if it doesn't exist
-if not os.path.exists('best_model.pth'):
-    download_model()
+# Initialize model
+model = MyModel(100).to(device)
 
-# Load the trained weights
+# Load the trained model
 try:
-    checkpoint = torch.load('best_model.pth', map_location=device)
-    # Try different ways to load the model state dict
-    if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
-        model.load_state_dict(checkpoint['model_state_dict'])
-    elif isinstance(checkpoint, dict) and 'state_dict' in checkpoint:
-        model.load_state_dict(checkpoint['state_dict'])
-    else:
-        model.load_state_dict(checkpoint)
-    model.to(device)
+    model.load_state_dict(torch.load('best_model.pth', map_location=device))
     model.eval()
-    print("Model loaded successfully!")
+    print("Model loaded successfully")
 except Exception as e:
-    print(f"Error loading model: {e}")
+    print(f"Error loading model: {str(e)}")
     raise
 
 # Define image transformations
@@ -48,58 +49,63 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.5], std=[0.5])
 ])
 
+def preprocess_image(image_bytes):
+    """Preprocess the uploaded image."""
+    try:
+        # Convert bytes to PIL Image
+        image = Image.open(io.BytesIO(image_bytes))
+        # Apply transformations
+        image_tensor = transform(image)
+        # Add batch dimension
+        image_tensor = image_tensor.unsqueeze(0)
+        return image_tensor.to(device)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error processing image: {str(e)}")
+
 @app.get("/")
-def home():
+async def root():
+    """Root endpoint returning API information."""
     return {
-        "message": "Bolt Hole Cast Number Identification API",
-        "usage": "Send a POST request to /predict with an image file to identify the cast number"
+        "message": "Bolt Hole Number Recognition API",
+        "version": "1.0.0",
+        "status": "active",
+        "device": str(device)
     }
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
+    """
+    Endpoint for predicting numbers in bolt hole images.
+    """
     try:
-        # Validate file type
-        if not file.content_type.startswith("image/"):
-            raise HTTPException(status_code=400, detail="File must be an image")
-            
-        # Read and transform image
-        image_data = await file.read()
-        image = Image.open(io.BytesIO(image_data))
+        # Read the uploaded file
+        contents = await file.read()
         
-        # Add size limit
-        if image.size[0] * image.size[1] > 4096 * 4096:
-            raise HTTPException(status_code=400, detail="Image too large")
-            
-        # Preprocess image
-        image_tensor = transform(image).unsqueeze(0).to(device)
+        # Preprocess the image
+        image_tensor = preprocess_image(contents)
         
         # Make prediction
         with torch.no_grad():
             outputs = model(image_tensor)
-            probabilities = torch.softmax(outputs, dim=1)
-            confidence, predicted = torch.max(probabilities, 1)
-            prediction = predicted.item()
-            confidence = confidence.item()
+            probabilities = F.softmax(outputs, dim=1)
+            predicted_class = outputs.argmax(dim=1).item()
+            confidence = probabilities.max().item()
         
-        # Convert prediction to result
-        if prediction == 100:
-            result = "No cast number detected"
-        else:
-            result = str(prediction).zfill(2)  # Format as two digits
-        
-        return {
-            "prediction": result,
+        # Prepare response
+        response = {
+            "predicted_number": predicted_class if predicted_class < 100 else "no_number",
             "confidence": float(confidence),
-            "raw_prediction": int(prediction),
-            "image_size": image.size,
-            "processing_device": str(device)
+            "raw_probabilities": probabilities[0].tolist()
         }
+        
+        return response
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/health")
-def health_check():
+async def health_check():
+    """Health check endpoint."""
     return {
         "status": "healthy",
         "model_loaded": True,
@@ -107,5 +113,4 @@ def health_check():
     }
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port) 
+    uvicorn.run(app, host="0.0.0.0", port=8000) 

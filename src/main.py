@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch.optim as optim
 from data.dataset import get_data_loaders
 from models.model import MyModel
-from training.trainer import train, evaluate, save_predictions
 
 def main():
     # Set your dataset paths here
@@ -58,8 +57,6 @@ def main():
         # Final evaluation on test set
         evaluate(model, test_dataloader, 100, device)
 
-        # Save predictions
-        save_predictions(model, test_dataloader, device)
 
     except Exception as e:
         print(f"An error occurred: {str(e)}")
