@@ -49,8 +49,8 @@ def main():
         if os.path.exists('best_model.pth'):
             checkpoint = torch.load('best_model.pth')
             model.load_state_dict(checkpoint['model_state_dict'])
-            print(f"\nBest model was saved at epoch {checkpoint['epoch'] + 1}")
-            print(f"Best validation loss: {checkpoint['val_loss']:.4f}")
+           # print(f"\nBest model was saved at epoch {checkpoint['epoch'] + 1}")
+           # print(f"Best validation loss: {checkpoint['val_loss']:.4f}")
         else:
             print("No saved model found. Using last trained model for evaluation.")
 
