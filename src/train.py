@@ -7,6 +7,8 @@ import pandas as pd
 from data.dataset import get_data_loaders
 from models.model import MyModel
 
+#compute the class weights for the training set
+#the class weights are computed based on the inverse frequency of the classes in the training set
 def compute_class_weights(train_loader, device):
     class_counts = torch.zeros(101, device=device)  # 0-99 for numbers, 100 for no-number
     total_samples = 0
@@ -30,6 +32,8 @@ def compute_class_weights(train_loader, device):
     class_weights = class_weights / class_weights.sum()
     
     return class_weights
+
+#train the model
 
 def train(model, train_loader, criterion, optimizer, device):
     model.train()
@@ -67,6 +71,8 @@ def train(model, train_loader, criterion, optimizer, device):
     no_number_acc = 100. * no_number_correct / no_number_total if no_number_total > 0 else 0
     return running_loss / len(train_loader), acc, no_number_acc
 
+#validate the model
+
 def validate(model, val_loader, criterion, device):
     model.eval()
     running_loss = 0.0
@@ -75,6 +81,7 @@ def validate(model, val_loader, criterion, device):
     no_number_correct = 0
     no_number_total = 0
     
+    #disable gradient calculation for validation
     with torch.no_grad():
         for images, labels in val_loader:
             images, labels = images.to(device), labels.to(device)
@@ -102,15 +109,15 @@ def validate(model, val_loader, criterion, device):
 
 def main():
     # Parameters
-    num_epochs = 35  # Increased epochs
-    batch_size = 64  # Increased batch size
+    num_epochs = 35 
+    batch_size = 64  
     initial_lr = 0.001
     warmup_epochs = 5
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     # Data paths
-    csv_path = "data_label.csv"
-    image_folder = "train&valdata"
+    csv_path = "src/data_label.csv"
+    image_folder = "src/train&valdata"
     
     # Get data loaders
     train_loader, val_loader = get_data_loaders(
@@ -169,7 +176,7 @@ def main():
         print(f'Epoch {epoch+1}/{num_epochs}:')
         print(f'Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%, No-Number: {train_no_number_acc:.2f}%')
         print(f'Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.2f}%, No-Number: {val_no_number_acc:.2f}%')
-        print('-' * 60)
+        print('-' * 50)
         
         # Save history to CSV
         pd.DataFrame(history).to_csv('training_history3.csv', index=False)
