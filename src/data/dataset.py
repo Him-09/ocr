@@ -9,7 +9,9 @@ class MyDataset(Dataset):
         self.data = pd.read_csv(csv_path, delim_whitespace=True)
         self.data['label'] = self.data['label'].fillna(100).astype(int)
         self.image_folder = image_folder
-        
+        # Define the transformations for the training and validation sets
+
+        #for training, we apply data augmentation
         if is_train:
             self.transform = transforms.Compose([
                 transforms.Grayscale(),
@@ -21,6 +23,7 @@ class MyDataset(Dataset):
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.5], std=[0.5])
             ])
+        #for validation, we don't apply data augmentation
         else:
             self.transform = transforms.Compose([
                 transforms.Grayscale(),
@@ -29,9 +32,11 @@ class MyDataset(Dataset):
                 transforms.Normalize(mean=[0.5], std=[0.5])
             ])
 
+    #number of images in the dataset
     def __len__(self):
         return len(self.data)
 
+    #get the image and label for the given index
     def __getitem__(self, idx):
         img_name = self.data.iloc[idx]['image_name']
         label = self.data.iloc[idx]['label']
@@ -45,6 +50,7 @@ class MyDataset(Dataset):
             print(f"Error loading image {img_path}: {str(e)}")
             raise
 
+#get the data loaders for the training and validation sets
 def get_data_loaders(csv_path, image_folder, batch_size=64, train_split=0.8):
     train_dataset = MyDataset(csv_path, image_folder, is_train=True)
     val_dataset = MyDataset(csv_path, image_folder, is_train=False)
@@ -58,6 +64,7 @@ def get_data_loaders(csv_path, image_folder, batch_size=64, train_split=0.8):
     
     return train_loader, val_loader
 
+#get the data loader for the test set
 def get_test_data_loaders(csv_path, image_folder, batch_size=64):
     test_dataset = MyDataset(csv_path, image_folder, is_train=False)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
